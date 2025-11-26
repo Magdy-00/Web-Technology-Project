@@ -61,6 +61,29 @@ body.dark-mode .cart-dropdown {
 	color: var(--text-primary);
 }
 
+body.dark-mode footer {
+	background-color: #0f172a;
+	color: #f1f5f9;
+}
+
+body.dark-mode .footer-section,
+body.dark-mode .footer-section h4,
+body.dark-mode .footer-section p {
+	color: #f1f5f9;
+}
+
+body.dark-mode .footer-section a {
+	color: #cbd5e1;
+}
+
+body.dark-mode .footer-section a:hover {
+	color: #fff;
+}
+
+body.dark-mode .footer-bottom {
+	color: #cbd5e1;
+}
+
 body.dark-mode .data-table tbody tr:hover {
 	background-color: var(--light-color);
 }
