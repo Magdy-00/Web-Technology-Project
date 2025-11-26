@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>TechMart - Wishlist</title>
-		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="../assets/css/styles.css" />
 	</head>
 	<body>
 		<header>
@@ -17,10 +17,10 @@
 						<span></span>
 					</button>
 					<ul class="nav-links" id="navLinks">
-						<li><a href="index.html">Home</a></li>
-						<li><a href="products.html">Products</a></li>
-						<li><a href="profile.html">Profile</a></li>
-						<li><a href="index.html">Logout</a></li>
+						<li><a href="index.php">Home</a></li>
+						<li><a href="products.php">Products</a></li>
+						<li><a href="profile.php">Profile</a></li>
+						<li><a href="index.php">Logout</a></li>
 					</ul>
 					<div class="nav-icons">
 						<button
@@ -54,7 +54,7 @@
 						<span>Total:</span>
 						<span id="cartTotal">$0</span>
 					</div>
-					<a href="checkout.html" class="btn btn-primary btn-full">Checkout</a>
+					<a href="checkout.php" class="btn btn-primary btn-full">Checkout</a>
 				</div>
 			</div>
 		</header>
@@ -70,7 +70,7 @@
 							<p class="price">$1,799</p>
 							<p class="description">Ultimate gaming experience</p>
 							<div class="product-actions">
-								<a href="checkout.html" class="btn btn-primary">Add to Cart</a>
+								<a href="checkout.php" class="btn btn-primary">Add to Cart</a>
 								<button class="btn btn-secondary">Remove</button>
 							</div>
 						</div>
@@ -80,7 +80,7 @@
 							<p class="price">$199</p>
 							<p class="description">HD surveillance camera</p>
 							<div class="product-actions">
-								<a href="checkout.html" class="btn btn-primary">Add to Cart</a>
+								<a href="checkout.php" class="btn btn-primary">Add to Cart</a>
 								<button class="btn btn-secondary">Remove</button>
 							</div>
 						</div>
@@ -99,9 +99,9 @@
 					<div class="footer-section">
 						<h4>Quick Links</h4>
 						<ul>
-							<li><a href="index.html">Home</a></li>
-							<li><a href="products.html">Products</a></li>
-							<li><a href="login.html">Login</a></li>
+							<li><a href="index.php">Home</a></li>
+							<li><a href="products.php">Products</a></li>
+							<li><a href="login.php">Login</a></li>
 						</ul>
 					</div>
 					<div class="footer-section">
@@ -116,6 +116,6 @@
 			</div>
 		</footer>
 
-		<script src="script.js"></script>
+		<script src="../assets/js/script.js"></script>
 	</body>
 </html>

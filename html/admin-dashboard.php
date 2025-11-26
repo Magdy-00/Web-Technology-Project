@@ -1,10 +1,34 @@
+<?php
+require_once '../config/db.php';
+
+// Get statistics from database
+$conn = getDBConnection();
+
+// Total Products
+$result = $conn->query("SELECT COUNT(*) as total FROM products");
+$totalProducts = $result->fetch_assoc()['total'];
+
+// Total Orders
+$result = $conn->query("SELECT COUNT(*) as total FROM orders");
+$totalOrders = $result->fetch_assoc()['total'];
+
+// Total Users
+$result = $conn->query("SELECT COUNT(*) as total FROM users WHERE is_admin = FALSE");
+$totalUsers = $result->fetch_assoc()['total'];
+
+// Total Revenue
+$result = $conn->query("SELECT COALESCE(SUM(total), 0) as revenue FROM orders");
+$revenue = $result->fetch_assoc()['revenue'];
+
+closeDBConnection($conn);
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>TechMart - Admin Dashboard</title>
-		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="../assets/css/styles.css" />
 	</head>
 	<body>
 		<header>
@@ -17,10 +41,10 @@
 						<span></span>
 					</button>
 					<ul class="nav-links" id="navLinks">
-						<li><a href="admin-dashboard.html" class="active">Dashboard</a></li>
-						<li><a href="manage-products.html">Manage Products</a></li>
-						<li><a href="manage-orders.html">Manage Orders</a></li>
-						<li><a href="index.html">Logout</a></li>
+						<li><a href="admin-dashboard.php" class="active">Dashboard</a></li>
+						<li><a href="manage-products.php">Manage Products</a></li>
+						<li><a href="manage-orders.php">Manage Orders</a></li>
+						<li><a href="logout.php">Logout</a></li>
 					</ul>
 					<div class="nav-icons">
 						<button
@@ -43,32 +67,32 @@
 						<div class="dashboard-card">
 							<div class="card-icon">📦</div>
 							<h3>Total Products</h3>
-							<p class="stat-number">156</p>
+							<p class="stat-number"><?php echo $totalProducts; ?></p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">📋</div>
 							<h3>Total Orders</h3>
-							<p class="stat-number">432</p>
+							<p class="stat-number"><?php echo $totalOrders; ?></p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">👥</div>
 							<h3>Total Users</h3>
-							<p class="stat-number">1,234</p>
+							<p class="stat-number"><?php echo $totalUsers; ?></p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">💰</div>
 							<h3>Revenue</h3>
-							<p class="stat-number">$45,678</p>
+							<p class="stat-number">$<?php echo number_format($revenue, 2); ?></p>
 						</div>
 					</div>
 
 					<div class="admin-actions">
 						<h2>Quick Actions</h2>
 						<div class="action-buttons">
-							<a href="manage-products.html" class="btn btn-primary"
+							<a href="manage-products.php" class="btn btn-primary"
 								>Manage Products</a
 							>
-							<a href="manage-orders.html" class="btn btn-secondary"
+							<a href="manage-orders.php" class="btn btn-secondary"
 								>Manage Orders</a
 							>
 						</div>
@@ -87,9 +111,9 @@
 					<div class="footer-section">
 						<h4>Quick Links</h4>
 						<ul>
-							<li><a href="index.html">Home</a></li>
-							<li><a href="products.html">Products</a></li>
-							<li><a href="login.html">Login</a></li>
+							<li><a href="index.php">Home</a></li>
+							<li><a href="products.php">Products</a></li>
+							<li><a href="login.php">Login</a></li>
 						</ul>
 					</div>
 					<div class="footer-section">
@@ -104,6 +128,6 @@
 			</div>
 		</footer>
 
-		<script src="script.js"></script>
+		<script src="../assets/js/script.js"></script>
 	</body>
 </html>

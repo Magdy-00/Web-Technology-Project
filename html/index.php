@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>TechMart - Home</title>
-		<link rel="stylesheet" href="styles.css" />
+		<link rel="stylesheet" href="../assets/css/styles.css" />
 	</head>
 	<body>
 		<header>
@@ -17,10 +17,11 @@
 						<span></span>
 					</button>
 					<ul class="nav-links" id="navLinks">
-						<li><a href="index.html" class="active">Home</a></li>
-						<li><a href="products.html">Products</a></li>
-						<li><a href="login.html">Login</a></li>
-						<li><a href="checkout.html">Checkout</a></li>
+						<li><a href="index.php" class="active">Home</a></li>
+						<li><a href="products.php">Products</a></li>
+						<li><a href="login.php">Login</a></li>
+						<li><a href="signup.php">Sign Up</a></li>
+						<li><a href="checkout.php">Checkout</a></li>
 					</ul>
 					<div class="nav-icons">
 						<button
@@ -54,7 +55,7 @@
 						<span>Total:</span>
 						<span id="cartTotal">$0</span>
 					</div>
-					<a href="checkout.html" class="btn btn-primary btn-full">Checkout</a>
+					<a href="checkout.php" class="btn btn-primary btn-full">Checkout</a>
 				</div>
 			</div>
 		</header>
@@ -65,7 +66,7 @@
 					<div class="hero-content">
 						<h1>Welcome to TechMart</h1>
 						<p>Your one-stop shop for the latest technology products</p>
-						<a href="products.html" class="btn btn-primary">Shop Now</a>
+						<a href="products.php" class="btn btn-primary">Shop Now</a>
 					</div>
 				</div>
 			</section>
@@ -102,15 +103,15 @@
 				<div class="container">
 					<h2>Browse Categories</h2>
 					<div class="category-grid">
-						<a href="products.html?category=laptops" class="category-card">
+						<a href="products.php?category=laptops" class="category-card">
 							<div class="category-image">💻</div>
 							<h3>Laptops</h3>
 						</a>
-						<a href="products.html?category=accessories" class="category-card">
+						<a href="products.php?category=accessories" class="category-card">
 							<div class="category-image">🎧</div>
 							<h3>Accessories</h3>
 						</a>
-						<a href="products.html?category=security" class="category-card">
+						<a href="products.php?category=security-tools" class="category-card">
 							<div class="category-image">🔐</div>
 							<h3>Security Tools</h3>
 						</a>
@@ -129,9 +130,9 @@
 					<div class="footer-section">
 						<h4>Quick Links</h4>
 						<ul>
-							<li><a href="index.html">Home</a></li>
-							<li><a href="products.html">Products</a></li>
-							<li><a href="login.html">Login</a></li>
+							<li><a href="index.php">Home</a></li>
+							<li><a href="products.php">Products</a></li>
+							<li><a href="login.php">Login</a></li>
 						</ul>
 					</div>
 					<div class="footer-section">
@@ -146,6 +147,6 @@
 			</div>
 		</footer>
 
-		<script src="script.js"></script>
+		<script src="../assets/js/script.js"></script>
 	</body>
 </html>
