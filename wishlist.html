@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>TechMart - Wishlist</title>
+		<link rel="stylesheet" href="styles.css" />
+	</head>
+	<body>
+		<header>
+			<nav class="navbar">
+				<div class="container">
+					<div class="logo">TechMart</div>
+					<button class="menu-toggle" id="menuToggle">
+						<span></span>
+						<span></span>
+						<span></span>
+					</button>
+					<ul class="nav-links" id="navLinks">
+						<li><a href="index.html">Home</a></li>
+						<li><a href="products.html">Products</a></li>
+						<li><a href="profile.html">Profile</a></li>
+						<li><a href="index.html">Logout</a></li>
+					</ul>
+					<div class="nav-icons">
+						<button
+							class="icon-btn"
+							id="darkModeToggle"
+							title="Toggle Dark Mode"
+						>
+							<span class="icon">🌙</span>
+						</button>
+						<button
+							class="icon-btn cart-btn"
+							id="cartBtn"
+							title="Shopping Cart"
+						>
+							<span class="icon">🛒</span>
+							<span class="cart-count" id="cartCount">0</span>
+						</button>
+					</div>
+				</div>
+			</nav>
+			<div class="cart-dropdown" id="cartDropdown">
+				<div class="cart-header">
+					<h3>Shopping Cart</h3>
+					<button class="close-cart" id="closeCart">✕</button>
+				</div>
+				<div class="cart-items-container" id="cartItemsContainer">
+					<p class="empty-cart">Your cart is empty</p>
+				</div>
+				<div class="cart-footer">
+					<div class="cart-total">
+						<span>Total:</span>
+						<span id="cartTotal">$0</span>
+					</div>
+					<a href="checkout.html" class="btn btn-primary btn-full">Checkout</a>
+				</div>
+			</div>
+		</header>
+
+		<main>
+			<section class="wishlist-section">
+				<div class="container">
+					<h1>My Wishlist</h1>
+					<div class="products-grid">
+						<div class="product-card">
+							<div class="product-image">💻</div>
+							<h3>Gaming Laptop</h3>
+							<p class="price">$1,799</p>
+							<p class="description">Ultimate gaming experience</p>
+							<div class="product-actions">
+								<a href="checkout.html" class="btn btn-primary">Add to Cart</a>
+								<button class="btn btn-secondary">Remove</button>
+							</div>
+						</div>
+						<div class="product-card">
+							<div class="product-image">📹</div>
+							<h3>Security Camera</h3>
+							<p class="price">$199</p>
+							<p class="description">HD surveillance camera</p>
+							<div class="product-actions">
+								<a href="checkout.html" class="btn btn-primary">Add to Cart</a>
+								<button class="btn btn-secondary">Remove</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<footer>
+			<div class="container">
+				<div class="footer-content">
+					<div class="footer-section">
+						<h4>TechMart</h4>
+						<p>Your trusted technology partner</p>
+					</div>
+					<div class="footer-section">
+						<h4>Quick Links</h4>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="products.html">Products</a></li>
+							<li><a href="login.html">Login</a></li>
+						</ul>
+					</div>
+					<div class="footer-section">
+						<h4>Contact</h4>
+						<p>Email: info@techmart.com</p>
+						<p>Phone: +1 234 567 890</p>
+					</div>
+				</div>
+				<div class="footer-bottom">
+					<p>&copy; 2025 TechMart. All rights reserved.</p>
+				</div>
+			</div>
+		</footer>
+
+		<script src="script.js"></script>
+	</body>
+</html>
