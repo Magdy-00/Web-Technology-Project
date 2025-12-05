@@ -179,9 +179,12 @@ document.addEventListener("DOMContentLoaded", function () {
 			const category = this.getAttribute("data-category");
 
 			productCards.forEach((card) => {
+				const cardCategory = card.getAttribute("data-category");
 				if (
 					category === "all" ||
-					card.getAttribute("data-category") === category
+					cardCategory === category ||
+					(cardCategory &&
+						cardCategory.toLowerCase().includes(category.toLowerCase()))
 				) {
 					card.style.display = "block";
 					setTimeout(() => {
@@ -197,6 +200,87 @@ document.addEventListener("DOMContentLoaded", function () {
 				}
 			});
 		});
+	});
+
+	// Form Validation
+	const forms = document.querySelectorAll("form");
+	forms.forEach((form) => {
+		form.addEventListener("submit", function (e) {
+			const requiredFields = form.querySelectorAll("[required]");
+			let isValid = true;
+
+			requiredFields.forEach((field) => {
+				if (!field.value.trim()) {
+					isValid = false;
+					field.style.borderColor = "#ef4444";
+				} else {
+					field.style.borderColor = "";
+				}
+			});
+
+			// Password confirmation validation
+			const password = form.querySelector('[name="password"]');
+			const confirmPassword = form.querySelector('[name="confirm_password"]');
+
+			if (
+				password &&
+				confirmPassword &&
+				password.value !== confirmPassword.value
+			) {
+				e.preventDefault();
+				isValid = false;
+				confirmPassword.style.borderColor = "#ef4444";
+				showNotification("Passwords do not match!", "#ef4444");
+			}
+
+			// Email validation
+			const emailField = form.querySelector('[type="email"]');
+			if (emailField && emailField.value) {
+				const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+				if (!emailRegex.test(emailField.value)) {
+					e.preventDefault();
+					isValid = false;
+					emailField.style.borderColor = "#ef4444";
+					showNotification("Please enter a valid email address!", "#ef4444");
+				}
+			}
+
+			if (!isValid && !password && !confirmPassword && !emailField) {
+				e.preventDefault();
+				showNotification("Please fill in all required fields!", "#ef4444");
+			}
+		});
+
+		// Remove error styling on input
+		const inputs = form.querySelectorAll("input, select, textarea");
+		inputs.forEach((input) => {
+			input.addEventListener("input", function () {
+				this.style.borderColor = "";
+			});
+		});
+	});
+
+	// Smooth scroll for anchor links
+	document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+		anchor.addEventListener("click", function (e) {
+			const href = this.getAttribute("href");
+			if (href !== "#" && document.querySelector(href)) {
+				e.preventDefault();
+				document.querySelector(href).scrollIntoView({
+					behavior: "smooth",
+				});
+			}
+		});
+	});
+
+	// Auto-hide alerts after 5 seconds
+	const alerts = document.querySelectorAll(".alert");
+	alerts.forEach((alert) => {
+		setTimeout(() => {
+			alert.style.opacity = "0";
+			alert.style.transition = "opacity 0.5s";
+			setTimeout(() => alert.remove(), 500);
+		}, 5000);
 	});
 
 	// Login Form Handler

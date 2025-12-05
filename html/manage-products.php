@@ -1,5 +1,12 @@
 <?php
+session_start();
 require_once '../config/db.php';
+
+// Check if user is admin (optional - comment out if no admin system yet)
+// if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
+//     header("Location: login.php");
+//     exit();
+// }
 
 // Handle product operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -9,12 +16,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($_POST['action']) {
             case 'add':
                 $name = sanitize($_POST['name']);
+                $brand = sanitize($_POST['brand']);
                 $description = sanitize($_POST['description']);
                 $price = floatval($_POST['price']);
-                $category_id = intval($_POST['category_id']);
+                $stock = intval($_POST['stock']);
+                $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
                 
-                $stmt = $conn->prepare("INSERT INTO products (name, description, price, category_id) VALUES (?, ?, ?, ?)");
-                $stmt->bind_param("ssdi", $name, $description, $price, $category_id);
+                if ($category_id) {
+                    $stmt = $conn->prepare("INSERT INTO products (name, brand, description, price, stock, category_id) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt->bind_param("sssdii", $name, $brand, $description, $price, $stock, $category_id);
+                } else {
+                    $stmt = $conn->prepare("INSERT INTO products (name, brand, description, price, stock) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->bind_param("sssdi", $name, $brand, $description, $price, $stock);
+                }
                 $stmt->execute();
                 $stmt->close();
                 break;
@@ -22,12 +36,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'edit':
                 $product_id = intval($_POST['product_id']);
                 $name = sanitize($_POST['name']);
+                $brand = sanitize($_POST['brand']);
                 $description = sanitize($_POST['description']);
                 $price = floatval($_POST['price']);
-                $category_id = intval($_POST['category_id']);
+                $stock = intval($_POST['stock']);
+                $category_id = !empty($_POST['category_id']) ? intval($_POST['category_id']) : null;
                 
-                $stmt = $conn->prepare("UPDATE products SET name = ?, description = ?, price = ?, category_id = ? WHERE product_id = ?");
-                $stmt->bind_param("ssdii", $name, $description, $price, $category_id, $product_id);
+                if ($category_id) {
+                    $stmt = $conn->prepare("UPDATE products SET name = ?, brand = ?, description = ?, price = ?, stock = ?, category_id = ? WHERE product_id = ?");
+                    $stmt->bind_param("sssdiis", $name, $brand, $description, $price, $stock, $category_id, $product_id);
+                } else {
+                    $stmt = $conn->prepare("UPDATE products SET name = ?, brand = ?, description = ?, price = ?, stock = ? WHERE product_id = ?");
+                    $stmt->bind_param("sssdii", $name, $brand, $description, $price, $stock, $product_id);
+                }
                 $stmt->execute();
                 $stmt->close();
                 break;
@@ -50,14 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all products
 $conn = getDBConnection();
-$result = $conn->query("SELECT p.product_id, p.name, p.description, p.price, c.name as category_name, p.category_id 
+$result = $conn->query("SELECT p.*, 
+                        (SELECT c.name FROM categories c WHERE c.category_id = p.category_id) as category_name,
+                        p.category_id
                         FROM products p 
-                        JOIN categories c ON p.category_id = c.category_id 
                         ORDER BY p.product_id DESC");
 $products = $result->fetch_all(MYSQLI_ASSOC);
 
 // Fetch categories for dropdown
-$categories_result = $conn->query("SELECT category_id, name FROM categories");
+$categories_result = $conn->query("SELECT category_id, name FROM categories ORDER BY name");
 $categories = $categories_result->fetch_all(MYSQLI_ASSOC);
 
 closeDBConnection($conn);
@@ -185,8 +207,10 @@ closeDBConnection($conn);
 								<tr>
 									<th>ID</th>
 									<th>Product Name</th>
+									<th>Brand</th>
 									<th>Category</th>
 									<th>Price</th>
+									<th>Stock</th>
 									<th>Actions</th>
 								</tr>
 							</thead>
@@ -195,15 +219,19 @@ closeDBConnection($conn);
 								<tr>
 									<td><?php echo $product['product_id']; ?></td>
 									<td><?php echo htmlspecialchars($product['name']); ?></td>
-									<td><?php echo htmlspecialchars(ucfirst($product['category_name'])); ?></td>
+									<td><?php echo htmlspecialchars($product['brand'] ?? 'N/A'); ?></td>
+									<td><?php echo htmlspecialchars(ucfirst($product['category_name'] ?? 'Other')); ?></td>
 									<td>$<?php echo number_format($product['price'], 2); ?></td>
+									<td><?php echo $product['stock']; ?></td>
 									<td>
 										<button class="btn-icon edit-btn" 
 											data-id="<?php echo $product['product_id']; ?>"
 											data-name="<?php echo htmlspecialchars($product['name']); ?>"
-											data-description="<?php echo htmlspecialchars($product['description']); ?>"
+											data-brand="<?php echo htmlspecialchars($product['brand'] ?? ''); ?>"
+											data-description="<?php echo htmlspecialchars($product['description'] ?? ''); ?>"
 											data-price="<?php echo $product['price']; ?>"
-											data-category="<?php echo $product['category_id']; ?>"
+											data-stock="<?php echo $product['stock']; ?>"
+											data-category="<?php echo $product['category_id'] ?? ''; ?>"
 											title="Edit">✏️</button>
 										<button class="btn-icon delete-btn" 
 											data-id="<?php echo $product['product_id']; ?>"
@@ -263,8 +291,13 @@ closeDBConnection($conn);
 					</div>
 					
 					<div class="form-group">
+						<label for="productBrand">Brand</label>
+						<input type="text" id="productBrand" name="brand" placeholder="Enter brand name">
+					</div>
+					
+					<div class="form-group">
 						<label for="productDescription">Description</label>
-						<textarea id="productDescription" name="description" required></textarea>
+						<textarea id="productDescription" name="description"></textarea>
 					</div>
 					
 					<div class="form-group">
@@ -273,8 +306,14 @@ closeDBConnection($conn);
 					</div>
 					
 					<div class="form-group">
+						<label for="productStock">Stock</label>
+						<input type="number" id="productStock" name="stock" min="0" value="0" required>
+					</div>
+					
+					<div class="form-group">
 						<label for="productCategory">Category</label>
-						<select id="productCategory" name="category_id" required>
+						<select id="productCategory" name="category_id">
+							<option value="">-- Select Category --</option>
 							<?php foreach ($categories as $category): ?>
 								<option value="<?php echo $category['category_id']; ?>">
 									<?php echo htmlspecialchars(ucfirst($category['name'])); ?>
@@ -316,16 +355,20 @@ closeDBConnection($conn);
 				btn.onclick = function() {
 					const id = this.dataset.id;
 					const name = this.dataset.name;
+					const brand = this.dataset.brand;
 					const description = this.dataset.description;
 					const price = this.dataset.price;
+					const stock = this.dataset.stock;
 					const category = this.dataset.category;
 
 					modalTitle.textContent = 'Edit Product';
 					formAction.value = 'edit';
 					productId.value = id;
 					document.getElementById('productName').value = name;
+					document.getElementById('productBrand').value = brand;
 					document.getElementById('productDescription').value = description;
 					document.getElementById('productPrice').value = price;
+					document.getElementById('productStock').value = stock;
 					document.getElementById('productCategory').value = category;
 					modal.style.display = 'block';
 				}

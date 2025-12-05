@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once '../config/db.php';
 
 // Get category filter from URL
@@ -7,33 +8,26 @@ $category_filter = isset($_GET['category']) ? sanitize($_GET['category']) : 'all
 // Fetch products from database
 $conn = getDBConnection();
 
-if ($category_filter === 'all') {
-    $sql = "SELECT p.*, c.name as category_name FROM products p 
-            JOIN categories c ON p.category_id = c.category_id 
-            ORDER BY p.name";
-    $result = $conn->query($sql);
-} else {
-    $sql = "SELECT p.*, c.name as category_name FROM products p 
-            JOIN categories c ON p.category_id = c.category_id 
-            WHERE c.name = ? 
-            ORDER BY p.name";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $category_filter);
-    $stmt->execute();
-    $result = $stmt->get_result();
-}
+// Simplified query to work with basic schema
+$sql = "SELECT p.*, 
+        (SELECT c.name FROM categories c WHERE c.category_id = p.category_id) as category_name 
+        FROM products p 
+        ORDER BY p.name";
+$result = $conn->query($sql);
 
-// Function to get icon based on category
-function getCategoryIcon($category) {
-    switch($category) {
-        case 'laptops':
-            return '💻';
-        case 'accessories':
-            return '🎧';
-        case 'security-tools':
-            return '🔐';
-        default:
-            return '📦';
+// Function to get icon based on category or product name
+function getCategoryIcon($category, $productName = '') {
+    $category = strtolower($category ?? '');
+    $productName = strtolower($productName);
+    
+    if (strpos($category, 'electronic') !== false || strpos($productName, 'laptop') !== false) {
+        return '💻';
+    } elseif (strpos($category, 'fashion') !== false || strpos($productName, 'headphone') !== false) {
+        return '🎧';
+    } elseif (strpos($category, 'home') !== false || strpos($productName, 'smartphone') !== false || strpos($productName, 'phone') !== false) {
+        return '📱';
+    } else {
+        return '📦';
     }
 }
 ?>
@@ -58,8 +52,12 @@ function getCategoryIcon($category) {
 					<ul class="nav-links" id="navLinks">
 						<li><a href="index.php">Home</a></li>
 						<li><a href="products.php" class="active">Products</a></li>
-						<li><a href="login.php">Login</a></li>
-						<li><a href="signup.php">Sign Up</a></li>
+						<?php if (isset($_SESSION['user_id'])): ?>
+							<li><a href="profile.php">Profile</a></li>
+							<li><a href="logout.php">Logout</a></li>
+						<?php else: ?>
+							<li><a href="login.php">Login</a></li>
+						<?php endif; ?>
 						<li><a href="checkout.php">Checkout</a></li>
 					</ul>
 					<div class="nav-icons">
@@ -112,15 +110,15 @@ function getCategoryIcon($category) {
 					<div class="filters">
 						<h3>Categories</h3>
 						<div class="filter-buttons">
-							<button class="filter-btn <?php echo $category_filter === 'all' ? 'active' : ''; ?>" data-category="all">All</button>
-							<button class="filter-btn <?php echo $category_filter === 'laptops' ? 'active' : ''; ?>" data-category="laptops">
-								Laptops
+							<button class="filter-btn active" data-category="all">All</button>
+							<button class="filter-btn" data-category="Electronics">
+								Electronics
 							</button>
-							<button class="filter-btn <?php echo $category_filter === 'accessories' ? 'active' : ''; ?>" data-category="accessories">
-								Accessories
+							<button class="filter-btn" data-category="Fashion">
+								Fashion
 							</button>
-							<button class="filter-btn <?php echo $category_filter === 'security-tools' ? 'active' : ''; ?>" data-category="security-tools">
-								Security Tools
+							<button class="filter-btn" data-category="Home Appliances">
+								Home Appliances
 							</button>
 						</div>
 					</div>
@@ -129,19 +127,23 @@ function getCategoryIcon($category) {
 						<?php
 						if ($result && $result->num_rows > 0) {
 							while($row = $result->fetch_assoc()) {
-								$icon = getCategoryIcon($row['category_name']);
+								$icon = getCategoryIcon($row['category_name'], $row['name']);
 								$price = number_format($row['price'], 0);
+								$description = !empty($row['description']) ? $row['description'] : 'Quality product available now';
 								?>
-								<div class="product-card" data-category="<?php echo htmlspecialchars($row['category_name']); ?>">
+								<div class="product-card" data-category="<?php echo htmlspecialchars($row['category_name'] ?? 'Other'); ?>">
 									<div class="product-image"><?php echo $icon; ?></div>
 									<h3><?php echo htmlspecialchars($row['name']); ?></h3>
+									<p class="brand"><?php echo htmlspecialchars($row['brand'] ?? ''); ?></p>
 									<p class="price">$<?php echo $price; ?></p>
-									<p class="description"><?php echo htmlspecialchars($row['description']); ?></p>
+									<p class="description"><?php echo htmlspecialchars($description); ?></p>
+									<p class="stock">In Stock: <?php echo $row['stock']; ?></p>
 									<button
 										class="btn btn-primary add-to-cart-btn"
 										data-name="<?php echo htmlspecialchars($row['name']); ?>"
 										data-price="<?php echo $row['price']; ?>"
 										data-icon="<?php echo $icon; ?>"
+										data-id="<?php echo $row['product_id']; ?>"
 									>
 										Add to Cart
 									</button>

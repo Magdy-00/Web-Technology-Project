@@ -11,9 +11,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitize($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
-    $full_name = sanitize($_POST['full_name']);
-    $phone = sanitize($_POST['phone']);
-    $address = sanitize($_POST['address']);
     
     // Validation
     if ($password !== $confirm_password) {
@@ -42,18 +39,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Hash password
                 $password_hash = password_hash($password, PASSWORD_DEFAULT);
                 
-                // Insert user
-                $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, FALSE)");
-                $stmt->bind_param("sss", $username, $email, $password_hash);
+                // Check if password_hash column exists, if not use simpler insert
+                $columns = $conn->query("SHOW COLUMNS FROM users LIKE 'password_hash'");
+                
+                if ($columns->num_rows > 0) {
+                    // Insert with password_hash
+                    $stmt = $conn->prepare("INSERT INTO users (username, email, password_hash, is_admin, created_at) VALUES (?, ?, ?, 0, CURDATE())");
+                    $stmt->bind_param("sss", $username, $email, $password_hash);
+                } else {
+                    // Insert without password_hash (will need to run init_techmart.sql first)
+                    $stmt = $conn->prepare("INSERT INTO users (username, email, created_at) VALUES (?, ?, CURDATE())");
+                    $stmt->bind_param("ss", $username, $email);
+                }
                 
                 if ($stmt->execute()) {
-                    $user_id = $stmt->insert_id;
-                    
-                    // Insert profile
-                    $stmt = $conn->prepare("INSERT INTO profiles (user_id, full_name, address, phone) VALUES (?, ?, ?, ?)");
-                    $stmt->bind_param("isss", $user_id, $full_name, $address, $phone);
-                    $stmt->execute();
-                    
                     $success = "Account created successfully! Redirecting to login...";
                     header("refresh:2;url=login.php");
                 } else {
@@ -197,39 +196,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 								</div>
 								
 								<div class="form-group">
-									<label for="full_name">Full Name</label>
-									<input
-										type="text"
-										id="full_name"
-										name="full_name"
-										placeholder="Enter your full name"
-										value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>"
-									/>
-								</div>
-								
-								<div class="form-group">
-									<label for="phone">Phone Number</label>
-									<input
-										type="tel"
-										id="phone"
-										name="phone"
-										placeholder="Enter your phone number"
-										value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>"
-									/>
-								</div>
-								
-								<div class="form-group">
-									<label for="address">Address</label>
-									<input
-										type="text"
-										id="address"
-										name="address"
-										placeholder="Enter your address"
-										value="<?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?>"
-									/>
-								</div>
-								
-								<div class="form-group">
 									<label for="password">Password *</label>
 									<input
 										type="password"
@@ -248,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 										id="confirm_password"
 										name="confirm_password"
 										required
-										placeholder="Re-enter your password"
+										placeholder="Confirm your password"
 										minlength="6"
 									/>
 								</div>
@@ -256,13 +222,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 								<button type="submit" class="btn btn-primary btn-full">
 									Create Account
 								</button>
-							</form>
-							
-							<div class="login-footer">
-								<p>
+								
+								<p class="form-footer">
 									Already have an account? <a href="login.php">Login here</a>
 								</p>
-							</div>
+							</form>
 						</div>
 					</div>
 				</div>

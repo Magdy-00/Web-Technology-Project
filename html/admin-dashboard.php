@@ -1,5 +1,12 @@
 <?php
+session_start();
 require_once '../config/db.php';
+
+// Check if user is admin (optional - can be uncommented when authentication is set up)
+// if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
+//     header("Location: login.php");
+//     exit();
+// }
 
 // Get statistics from database
 $conn = getDBConnection();
@@ -8,17 +15,30 @@ $conn = getDBConnection();
 $result = $conn->query("SELECT COUNT(*) as total FROM products");
 $totalProducts = $result->fetch_assoc()['total'];
 
-// Total Orders
-$result = $conn->query("SELECT COUNT(*) as total FROM orders");
-$totalOrders = $result->fetch_assoc()['total'];
+// Check if orders table exists
+$tablesResult = $conn->query("SHOW TABLES LIKE 'orders'");
+$ordersTableExists = $tablesResult->num_rows > 0;
+
+if ($ordersTableExists) {
+    // Total Orders
+    $result = $conn->query("SELECT COUNT(*) as total FROM orders");
+    $totalOrders = $result->fetch_assoc()['total'];
+    
+    // Total Revenue
+    $result = $conn->query("SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders");
+    $revenue = $result->fetch_assoc()['revenue'];
+} else {
+    $totalOrders = 0;
+    $revenue = 0;
+}
 
 // Total Users
-$result = $conn->query("SELECT COUNT(*) as total FROM users WHERE is_admin = FALSE");
+$result = $conn->query("SELECT COUNT(*) as total FROM users");
 $totalUsers = $result->fetch_assoc()['total'];
 
-// Total Revenue
-$result = $conn->query("SELECT COALESCE(SUM(total), 0) as revenue FROM orders");
-$revenue = $result->fetch_assoc()['revenue'];
+// Total Categories
+$result = $conn->query("SELECT COUNT(*) as total FROM categories");
+$totalCategories = $result->fetch_assoc()['total'];
 
 closeDBConnection($conn);
 ?>
@@ -63,26 +83,32 @@ closeDBConnection($conn);
 			<section class="dashboard">
 				<div class="container">
 					<h1>Admin Dashboard</h1>
+					<p style="margin-bottom: 2rem; color: var(--text-secondary);">Welcome to TechMart Admin Panel</p>
 					<div class="dashboard-grid">
 						<div class="dashboard-card">
 							<div class="card-icon">📦</div>
-							<h3>Total Products</h3>
-							<p class="stat-number"><?php echo $totalProducts; ?></p>
+							<h3><?php echo $totalProducts; ?></h3>
+							<p class="stat-label">Total Products</p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">📋</div>
-							<h3>Total Orders</h3>
-							<p class="stat-number"><?php echo $totalOrders; ?></p>
+							<h3><?php echo $totalOrders; ?></h3>
+							<p class="stat-label">Total Orders</p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">👥</div>
-							<h3>Total Users</h3>
-							<p class="stat-number"><?php echo $totalUsers; ?></p>
+							<h3><?php echo $totalUsers; ?></h3>
+							<p class="stat-label">Total Users</p>
 						</div>
 						<div class="dashboard-card">
 							<div class="card-icon">💰</div>
-							<h3>Revenue</h3>
-							<p class="stat-number">$<?php echo number_format($revenue, 2); ?></p>
+							<h3>$<?php echo number_format($revenue, 2); ?></h3>
+							<p class="stat-label">Total Revenue</p>
+						</div>
+						<div class="dashboard-card">
+							<div class="card-icon">📂</div>
+							<h3><?php echo $totalCategories; ?></h3>
+							<p class="stat-label">Categories</p>
 						</div>
 					</div>
 
@@ -95,7 +121,16 @@ closeDBConnection($conn);
 							<a href="manage-orders.php" class="btn btn-secondary"
 								>Manage Orders</a
 							>
+							<a href="products.php" class="btn btn-secondary"
+								>View Store</a
+							>
 						</div>
+						
+						<?php if (!$ordersTableExists): ?>
+						<div class="admin-note" style="margin-top: 2rem; padding: 1rem; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+							<strong>Note:</strong> Orders table not found. Please run the <code>init_techmart.sql</code> script to add missing tables.
+						</div>
+						<?php endif; ?>
 					</div>
 				</div>
 			</section>

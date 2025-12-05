@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -16,13 +19,17 @@
 						<span></span>
 						<span></span>
 					</button>
-					<ul class="nav-links" id="navLinks">
-						<li><a href="index.php" class="active">Home</a></li>
-						<li><a href="products.php">Products</a></li>
+				<ul class="nav-links" id="navLinks">
+					<li><a href="index.php" class="active">Home</a></li>
+					<li><a href="products.php">Products</a></li>
+					<?php if (isset($_SESSION['user_id'])): ?>
+						<li><a href="profile.php">Profile</a></li>
+						<li><a href="logout.php">Logout</a></li>
+					<?php else: ?>
 						<li><a href="login.php">Login</a></li>
-						<li><a href="signup.php">Sign Up</a></li>
-						<li><a href="checkout.php">Checkout</a></li>
-					</ul>
+					<?php endif; ?>
+					<li><a href="checkout.php">Checkout</a></li>
+				</ul>
 					<div class="nav-icons">
 						<button
 							class="icon-btn"

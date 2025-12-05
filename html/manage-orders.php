@@ -8,9 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $order_id = intval($_POST['order_id']);
     $status = sanitize($_POST['status']);
     
-    // Add status column if it doesn't exist
-    $conn->query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending'");
-    
     $stmt = $conn->prepare("UPDATE orders SET status = ? WHERE order_id = ?");
     $stmt->bind_param("si", $status, $order_id);
     $stmt->execute();
@@ -24,12 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // Fetch all orders with user information
 $conn = getDBConnection();
 
-// Add status column if it doesn't exist
-$conn->query("ALTER TABLE orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending'");
-
-$result = $conn->query("SELECT o.order_id, o.total, o.order_date, o.status, u.username, u.email 
+$result = $conn->query("SELECT o.order_id, o.total_amount, o.order_date, o.status, u.username, u.email 
                         FROM orders o 
-                        LEFT JOIN users u ON o.user_id = u.user_id 
+                        LEFT JOIN users u ON o.customer_id = u.user_id 
                         ORDER BY o.order_date DESC");
 $orders = $result->fetch_all(MYSQLI_ASSOC);
 
@@ -164,7 +158,7 @@ closeDBConnection($conn);
 									<td><?php echo htmlspecialchars($order['username'] ?? 'Guest'); ?></td>
 									<td><?php echo htmlspecialchars($order['email'] ?? 'N/A'); ?></td>
 									<td><?php echo date('M d, Y', strtotime($order['order_date'])); ?></td>
-									<td>$<?php echo number_format($order['total'], 2); ?></td>
+									<td>$<?php echo number_format($order['total_amount'], 2); ?></td>
 									<td>
 										<?php 
 										$status = $order['status'] ?? 'pending';

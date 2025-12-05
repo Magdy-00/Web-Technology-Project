@@ -11,10 +11,10 @@ if (!isset($_SESSION['user_id'])) {
 $conn = getDBConnection();
 $user_id = $_SESSION['user_id'];
 
-// Fetch user and profile data
-$stmt = $conn->prepare("SELECT u.username, u.email, p.full_name, p.address, p.phone 
+// Fetch user and address data
+$stmt = $conn->prepare("SELECT u.username, u.email, a.street, a.city, a.country, a.postal_code 
                         FROM users u 
-                        LEFT JOIN profiles p ON u.user_id = p.user_id 
+                        LEFT JOIN addresses a ON u.user_id = a.user_id 
                         WHERE u.user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -27,32 +27,33 @@ $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $full_name = sanitize($_POST['full_name']);
-    $phone = sanitize($_POST['phone']);
-    $address = sanitize($_POST['address']);
+    $street = sanitize($_POST['street']);
+    $city = sanitize($_POST['city']);
+    $country = sanitize($_POST['country']);
+    $postal_code = sanitize($_POST['postal_code']);
     
-    // Check if profile exists
-    $stmt = $conn->prepare("SELECT profile_id FROM profiles WHERE user_id = ?");
+    // Check if address exists
+    $stmt = $conn->prepare("SELECT address_id FROM addresses WHERE user_id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     
     if ($result->num_rows > 0) {
-        // Update existing profile
-        $stmt = $conn->prepare("UPDATE profiles SET full_name = ?, phone = ?, address = ? WHERE user_id = ?");
-        $stmt->bind_param("sssi", $full_name, $phone, $address, $user_id);
+        // Update existing address
+        $stmt = $conn->prepare("UPDATE addresses SET street = ?, city = ?, country = ?, postal_code = ? WHERE user_id = ?");
+        $stmt->bind_param("ssssi", $street, $city, $country, $postal_code, $user_id);
     } else {
-        // Insert new profile
-        $stmt = $conn->prepare("INSERT INTO profiles (user_id, full_name, phone, address) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isss", $user_id, $full_name, $phone, $address);
+        // Insert new address
+        $stmt = $conn->prepare("INSERT INTO addresses (user_id, street, city, country, postal_code) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issss", $user_id, $street, $city, $country, $postal_code);
     }
     
     if ($stmt->execute()) {
         $success = "Profile updated successfully!";
         // Refresh user data
-        $stmt = $conn->prepare("SELECT u.username, u.email, p.full_name, p.address, p.phone 
+        $stmt = $conn->prepare("SELECT u.username, u.email, a.street, a.city, a.country, a.postal_code 
                                 FROM users u 
-                                LEFT JOIN profiles p ON u.user_id = p.user_id 
+                                LEFT JOIN addresses a ON u.user_id = a.user_id 
                                 WHERE u.user_id = ?");
         $stmt->bind_param("i", $user_id);
         $stmt->execute();
@@ -185,13 +186,15 @@ closeDBConnection($conn);
 							
 							<form class="profile-form" method="POST">
 								<div class="form-group">
-									<label for="fullname">Full Name</label>
+									<label for="username">Username</label>
 									<input
 										type="text"
-										id="fullname"
-										name="full_name"
-										value="<?php echo htmlspecialchars($user['full_name'] ?? ''); ?>"
+										id="username"
+										name="username"
+										value="<?php echo htmlspecialchars($user['username']); ?>"
+										disabled
 									/>
+									<small>Username cannot be changed</small>
 								</div>
 								<div class="form-group">
 									<label for="email">Email</label>
@@ -205,17 +208,40 @@ closeDBConnection($conn);
 									<small>Email cannot be changed</small>
 								</div>
 								<div class="form-group">
-									<label for="phone">Phone</label>
+									<label for="street">Street Address</label>
 									<input
-										type="tel"
-										id="phone"
-										name="phone"
-										value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>"
+										type="text"
+										id="street"
+										name="street"
+										value="<?php echo htmlspecialchars($user['street'] ?? ''); ?>"
 									/>
 								</div>
 								<div class="form-group">
-									<label for="address">Address</label>
-									<textarea id="address" name="address" rows="3"><?php echo htmlspecialchars($user['address'] ?? ''); ?></textarea>
+									<label for="city">City</label>
+									<input
+										type="text"
+										id="city"
+										name="city"
+										value="<?php echo htmlspecialchars($user['city'] ?? ''); ?>"
+									/>
+								</div>
+								<div class="form-group">
+									<label for="country">Country</label>
+									<input
+										type="text"
+										id="country"
+										name="country"
+										value="<?php echo htmlspecialchars($user['country'] ?? ''); ?>"
+									/>
+								</div>
+								<div class="form-group">
+									<label for="postal_code">Postal Code</label>
+									<input
+										type="text"
+										id="postal_code"
+										name="postal_code"
+										value="<?php echo htmlspecialchars($user['postal_code'] ?? ''); ?>"
+									/>
 								</div>
 								<button type="submit" class="btn btn-primary">
 									Update Profile

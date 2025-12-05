@@ -1,3 +1,25 @@
+<?php
+session_start();
+require_once '../config/db.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php?redirect=order-history.php");
+    exit();
+}
+
+// Fetch user's orders
+$conn = getDBConnection();
+$user_id = $_SESSION['user_id'];
+
+$result = $conn->query("SELECT o.order_id, o.order_date, o.total_amount, o.status, o.shipping_address 
+                        FROM orders o 
+                        WHERE o.customer_id = $user_id 
+                        ORDER BY o.order_date DESC");
+$orders = $result->fetch_all(MYSQLI_ASSOC);
+
+closeDBConnection($conn);
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -16,12 +38,12 @@
 						<span></span>
 						<span></span>
 					</button>
-					<ul class="nav-links" id="navLinks">
-						<li><a href="index.php">Home</a></li>
-						<li><a href="products.php">Products</a></li>
-						<li><a href="profile.php">Profile</a></li>
-						<li><a href="index.php">Logout</a></li>
-					</ul>
+				<ul class="nav-links" id="navLinks">
+					<li><a href="index.php">Home</a></li>
+					<li><a href="products.php">Products</a></li>
+					<li><a href="profile.php">Profile</a></li>
+					<li><a href="logout.php">Logout</a></li>
+				</ul>
 					<div class="nav-icons">
 						<button
 							class="icon-btn"
@@ -63,41 +85,45 @@
 			<section class="profile-section">
 				<div class="container">
 					<h1>Order History</h1>
+					<?php if (isset($_GET['success'])): ?>
+					<div class="alert alert-success">Order placed successfully!</div>
+					<?php endif; ?>
 					<div class="orders-list">
+						<?php if (empty($orders)): ?>
+						<p style="text-align: center; padding: 2rem; color: #666;">No orders found. <a href="products.php">Start shopping!</a></p>
+						<?php else: ?>
+						<?php foreach ($orders as $order): 
+							// Get order items
+							$conn = getDBConnection();
+							$items_result = $conn->query("SELECT oi.quantity, oi.price, p.name 
+														 FROM order_items oi 
+														 LEFT JOIN products p ON oi.product_id = p.product_id 
+														 WHERE oi.order_id = " . $order['order_id']);
+							$items = $items_result->fetch_all(MYSQLI_ASSOC);
+							closeDBConnection($conn);
+							
+							$status_class = 'status-' . strtolower($order['status']);
+						?>
 						<div class="order-card">
 							<div class="order-header">
 								<div>
-									<h3>Order #1001</h3>
-									<p class="order-date">November 25, 2025</p>
+									<h3>Order #<?php echo $order['order_id']; ?></h3>
+									<p class="order-date"><?php echo date('F d, Y', strtotime($order['order_date'])); ?></p>
 								</div>
-								<span class="status-badge status-shipping">Shipping</span>
+								<span class="status-badge <?php echo $status_class; ?>"><?php echo htmlspecialchars($order['status']); ?></span>
 							</div>
 							<div class="order-items">
-								<p>Premium Laptop - $1,299</p>
-								<p>Wireless Headphones - $299</p>
+								<?php foreach ($items as $item): ?>
+								<p><?php echo htmlspecialchars($item['name']); ?> (x<?php echo $item['quantity']; ?>) - $<?php echo number_format($item['price'], 2); ?></p>
+								<?php endforeach; ?>
 							</div>
 							<div class="order-footer">
-								<p class="order-total">Total: $1,746</p>
-								<button class="btn btn-secondary">Track Order</button>
+								<p class="order-total">Total: $<?php echo number_format($order['total_amount'], 2); ?></p>
+								<p style="font-size: 0.9em; color: #666;">Shipping to: <?php echo htmlspecialchars($order['shipping_address']); ?></p>
 							</div>
 						</div>
-						<div class="order-card">
-							<div class="order-header">
-								<div>
-									<h3>Order #987</h3>
-									<p class="order-date">November 15, 2025</p>
-								</div>
-								<span class="status-badge status-completed">Delivered</span>
-							</div>
-							<div class="order-items">
-								<p>Mechanical Keyboard - $149</p>
-							</div>
-							<div class="order-footer">
-								<p class="order-total">Total: $169</p>
-								<button class="btn btn-secondary">View Details</button>
-							</div>
-						</div>
-					</div>
+						<?php endforeach; ?>
+						<?php endif; ?>
 				</div>
 			</section>
 		</main>

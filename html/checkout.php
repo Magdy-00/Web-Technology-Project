@@ -1,3 +1,91 @@
+<?php
+session_start();
+require_once '../config/db.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php?redirect=checkout.php&message=Please login to checkout");
+    exit();
+}
+
+// Handle order placement
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
+    $conn = getDBConnection();
+    
+    try {
+        // Start transaction
+        $conn->begin_transaction();
+        
+        $user_id = $_SESSION['user_id'];
+        $fullname = sanitize($_POST['fullname']);
+        $email = sanitize($_POST['email']);
+        $phone = sanitize($_POST['phone']);
+        $address = sanitize($_POST['address']);
+        $city = sanitize($_POST['city']);
+        $state = sanitize($_POST['state']);
+        $zip = sanitize($_POST['zip']);
+        
+        $shipping_address = $address . ', ' . $city . ', ' . $state . ' ' . $zip;
+        $cart_items = json_decode($_POST['cart_items'], true);
+        
+        if (empty($cart_items)) {
+            throw new Exception('Cart is empty');
+        }
+        
+        // Calculate total
+        $total_amount = 0;
+        foreach ($cart_items as $item) {
+            $total_amount += $item['price'] * $item['quantity'];
+        }
+        
+        // Create order
+        $stmt = $conn->prepare("INSERT INTO orders (customer_id, order_date, total_amount, currency, status, shipping_address, notes) VALUES (?, NOW(), ?, 'USD', 'Processing', ?, ?)");
+        $notes = 'Customer: ' . $fullname . ', Phone: ' . $phone . ', Email: ' . $email;
+        $stmt->bind_param("idss", $user_id, $total_amount, $shipping_address, $notes);
+        $stmt->execute();
+        $order_id = $conn->insert_id;
+        $stmt->close();
+        
+        // Insert order items and reduce stock
+        $stmt_item = $conn->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+        $stmt_stock = $conn->prepare("UPDATE products SET stock = stock - ? WHERE product_id = ? AND stock >= ?");
+        
+        foreach ($cart_items as $item) {
+            $product_id = intval($item['id']);
+            $quantity = intval($item['quantity']);
+            $price = floatval($item['price']);
+            
+            // Insert order item
+            $stmt_item->bind_param("iiid", $order_id, $product_id, $quantity, $price);
+            $stmt_item->execute();
+            
+            // Reduce stock
+            $stmt_stock->bind_param("iii", $quantity, $product_id, $quantity);
+            $stmt_stock->execute();
+            
+            if ($stmt_stock->affected_rows === 0) {
+                throw new Exception('Insufficient stock for product ID: ' . $product_id);
+            }
+        }
+        
+        $stmt_item->close();
+        $stmt_stock->close();
+        
+        // Commit transaction
+        $conn->commit();
+        closeDBConnection($conn);
+        
+        // Clear cart and redirect
+        echo "<script>localStorage.removeItem('cart'); window.location.href='order-history.php?success=1';</script>";
+        exit();
+        
+    } catch (Exception $e) {
+        $conn->rollback();
+        closeDBConnection($conn);
+        $error_message = $e->getMessage();
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -17,11 +105,11 @@
 						<span></span>
 					</button>
 					<ul class="nav-links" id="navLinks">
-						<li><a href="index.php">Home</a></li>
-						<li><a href="products.php">Products</a></li>
-						<li><a href="login.php">Login</a></li>
-						<li><a href="signup.php">Sign Up</a></li>
-						<li><a href="checkout.php" class="active">Checkout</a></li>
+					<li><a href="index.php">Home</a></li>
+					<li><a href="products.php">Products</a></li>
+					<li><a href="profile.php">Profile</a></li>
+					<li><a href="logout.php">Logout</a></li>
+					<li><a href="checkout.php" class="active">Checkout</a></li>
 					</ul>
 					<div class="nav-icons">
 						<button
@@ -64,10 +152,13 @@
 			<section class="checkout-section">
 				<div class="container">
 					<h1>Checkout</h1>
+					<?php if (isset($error_message)): ?>
+					<div class="alert alert-error"><?php echo htmlspecialchars($error_message); ?></div>
+					<?php endif; ?>
 					<div class="checkout-container">
 						<div class="checkout-form">
 							<h2>Shipping Information</h2>
-							<form id="checkoutForm">
+							<form id="checkoutForm" method="POST">
 								<div class="form-group">
 									<label for="fullname">Full Name</label>
 									<input type="text" id="fullname" name="fullname" required />
@@ -114,10 +205,12 @@
 										<span>PayPal</span>
 									</label>
 								</div>
-								<button type="submit" class="btn btn-primary btn-full">
-									Place Order
-								</button>
-							</form>
+									<input type="hidden" name="place_order" value="1">
+									<input type="hidden" name="cart_items" id="cartItemsData">
+									<button type="submit" class="btn btn-primary btn-full">
+										Place Order
+									</button>
+								</form>
 						</div>
 						<div class="order-summary">
 							<h2>Order Summary</h2>
@@ -183,5 +276,12 @@
 		</footer>
 
 		<script src="../assets/js/script.js"></script>
+		<script>
+			// Populate cart items data before form submission
+			document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+				const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+				document.getElementById('cartItemsData').value = JSON.stringify(cart);
+			});
+		</script>
 	</body>
 </html>
