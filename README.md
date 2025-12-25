@@ -420,6 +420,7 @@ product_id (FK)      - INT
 
 ### Home Page
 
+<<<<<<< HEAD
 Modern landing page with hero section and featured categories.
 
 ### Products Page
@@ -429,6 +430,17 @@ Grid layout with category filtering and add-to-cart functionality.
 ### Shopping Cart
 
 Dropdown cart with item preview and quick checkout.
+=======
+<img width="1904" height="924" alt="image" src="https://github.com/user-attachments/assets/f3f966a6-e6e2-4fcd-b27a-3a0b42befc4e" />
+<img width="1905" height="918" alt="image" src="https://github.com/user-attachments/assets/55aad1f3-2ffb-40cd-88ab-0736adc7e4d1" />
+
+
+
+### Products Page
+
+<img width="1904" height="914" alt="image" src="https://github.com/user-attachments/assets/962c1f4f-a81f-4ce3-91b6-ea74a7456c6b" />
+
+>>>>>>> 91b6ce37b426db60637dfc877d10b6b497cecfc4
 
 ### Admin Dashboard
 
